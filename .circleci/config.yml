@@ -72,6 +72,16 @@ orbs:
     jq: circleci/jq@3.0.2
 
 commands:
+    https-checkout:
+      steps:
+        - run:
+            name: "Disable Circleci default SSH checkout"
+            command: mkdir -p /tmp/empty_checkout
+        - checkout:
+            path: /tmp/empty_checkout
+        - checkout:
+            clone:
+              ssh: false
     deploy-code:
         parameters:
             install_python:
@@ -143,7 +153,7 @@ jobs:
         - DEPLOY_USE_ORB: true
         - INSTALL_PYTHON: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run: bash ci/circleci-build-android-arm64.sh
         - deploy-code:
@@ -157,7 +167,7 @@ jobs:
         - DEPLOY_USE_ORB: true
         - INSTALL_PYTHON: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run: bash ci/circleci-build-android-armhf.sh
         - deploy-code:
@@ -172,7 +182,7 @@ jobs:
             DEPLOY_USE_ORB: false
             INSTALL_PYTHON: false
         steps:
-        - checkout
+        - https-checkout
         - run: sudo chmod go+w /usr/local
         - restore_cache:
             key: "{{checksum \"build-deps/macos-cache-stamp\"}}\
@@ -205,7 +215,7 @@ jobs:
         - WX_VER: 32
         - DEPLOY_USE_ORB: false
         steps:
-        - checkout
+        - https-checkout
         - run:
             privileged: False
             shell: cmd.exe
@@ -224,7 +234,7 @@ jobs:
         - SDK_VER: 22.08
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run:
             command: bash ci/circleci-build-flatpak.sh
@@ -240,7 +250,7 @@ jobs:
         - SDK_VER: 22.08
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run:
             command: bash ci/circleci-build-flatpak.sh
@@ -258,7 +268,7 @@ jobs:
         - SDK_VER: 24.08
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run:
             command: bash ci/circleci-build-flatpak.sh
@@ -274,7 +284,7 @@ jobs:
         - SDK_VER: 24.08
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run:
             command: bash ci/circleci-build-flatpak.sh
@@ -293,7 +303,7 @@ jobs:
         - BUILD_GTK3: true
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ./ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -312,7 +322,7 @@ jobs:
         - BUILD_GTK3: true
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ./ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -329,7 +339,7 @@ jobs:
         - BUILD_ENV=debian
         - DOCKER_IMAGE=debian:trixie
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -348,7 +358,7 @@ jobs:
         - BUILD_GTK3: true
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ./ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -367,7 +377,7 @@ jobs:
         - BUILD_GTK3: true
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ./ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -384,7 +394,7 @@ jobs:
         - BUILD_ENV=debian
         - DOCKER_IMAGE=debian:bookworm
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -402,7 +412,7 @@ jobs:
         - BUILD_GTK3: true
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ./ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -420,7 +430,7 @@ jobs:
         - BUILD_GTK3: true
         - DEPLOY_USE_ORB: true
         steps:
-        - checkout
+        - https-checkout
         - run: chmod a+x ./ci/*.sh
         - run:
             command: ci/circleci-build-ubuntu-docker.sh
@@ -435,7 +445,7 @@ jobs:
         - DEPLOY_USE_ORB: true
         - BUILD_ENV=debian
         steps:
-        - checkout
+        - https-checkout
         - run: >
             echo "deb-src http://ftp.us.debian.org/debian bullseye main"
             | sudo tee -a /etc/apt/sources.list
@@ -457,7 +467,7 @@ jobs:
         - DEPLOY_USE_ORB: true
         - BUILD_ENV=ubuntu
         steps:
-        - checkout
+        - https-checkout
         - run:
             name: "Update apt sources"
             command: |
@@ -485,7 +495,7 @@ jobs:
         - WX_VER_PATCH: 2
         - DEPLOY_USE_ORB: false
         steps:
-        - checkout
+        - https-checkout
         - run:
             privileged: False
             shell: cmd.exe

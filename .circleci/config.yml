@@ -78,9 +78,9 @@ commands:
             name: "Disable Circleci default SSH checkout"
             command: mkdir -p /tmp/empty_checkout
         - checkout:
-            path: /tmp/empty_checkout
-            clone:
-              ssh: false
+            - path: /tmp/empty_checkout
+            - clone:
+                ssh: false
     deploy-code:
         parameters:
             install_python:

@@ -76,7 +76,7 @@ commands:
       steps:
         - run:
             name: "Disable Circleci default SSH checkout"
-            command: mkdir -p /tmp/empty_checkout
+            # command: mkdir -p /tmp/empty_checkout
         - checkout:
             clone:
               ssh: false

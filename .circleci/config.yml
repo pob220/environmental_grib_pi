@@ -74,12 +74,12 @@ orbs:
 commands:
     https-checkout:
       steps:
-        - run:
-            name: "Disable Cirecleci default SSH checkout"
-            command: mkdir -p /tmp/empty_checkout
+#        - run:
+#            name: "Disable Cirecleci default SSH checkout"
+#            command: mkdir -p /tmp/empty_checkout
         - checkout:
             clone:
-              ssh: false
+#              ssh: false
     deploy-code:
         parameters:
             install_python:

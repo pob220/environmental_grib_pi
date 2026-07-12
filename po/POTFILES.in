@@ -1,13 +1,4 @@
-src/tpControlDialogDef.cpp
-src/tpControlDialogImpl.cpp
-src/tpicons.cpp
-src/tpJSON.cpp
-src/testplugin_pi.cpp
-src/tpUtils.cpp
-include/testplugin_pi.h
-include/tpicons.h
-include/tpControlDialogDef.h
-include/tpControlDialogImpl.h
-include/tpIconCombo.h
-include/tpJSON.h
-include/tpUtils.h
+src/environmental_grib_pi.cpp
+src/EnvironmentalGribDialog.cpp
+include/environmental_grib_pi.h
+include/EnvironmentalGribDialog.h

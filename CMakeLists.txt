@@ -19,7 +19,7 @@
 # - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,                                       *
 # - xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                       *
 # -----------------------------------------------------------------------------
-# Frontend2 Author: Jon Gough Testplugin(TP) v1.0.362.0 19/06/2026 DD/MM/YYYY
+# Frontend2 Author: Jon Gough Environmental_grib(TP) v1.0.362.0 19/06/2026 DD/MM/YYYY
 # format buildCI:yes useODAPI:yes validateJSON:yes
 # ---------------------------------------------------------------------------
 # -- When changing this file do NOT change the order of the sections.    -- ##
@@ -61,23 +61,21 @@ endif (COMMAND cmake_policy)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 # define plugin name, owner and versions
-set(VERBOSE_NAME "Testplugin")
-set(COMMON_NAME "Testplugin")
-set(TITLE_NAME "testplugin")
-set(PACKAGE_CONTACT "Jon Gough")
-set(PACKAGE "testplugin")
-set(SHORT_DESCRIPTION
-    "Plugin to test examples of the ODAPI and JSON interface for ODRAW"
-)
+set(VERBOSE_NAME "EnvironmentalGRIB")
+set(COMMON_NAME "EnvironmentalGRIB")
+set(TITLE_NAME "environmental_grib")
+set(PACKAGE_CONTACT "Paul")
+set(PACKAGE "environmental_grib_pi")
+set(SHORT_DESCRIPTION "Generate combined weather, wave, and current GRIB files.")
 set(LONG_DESCRIPTION
-    "testplugin Plugin is used to test out the ODraw API and demonstrate how to use it successfully from another plugin"
+    "Downloads and converts environmental model data using an isolated native helper, producing validated GRIB files for OpenCPN."
 )
 
-set(VERSION_MAJOR "1")
-set(VERSION_MINOR "0")
-set(VERSION_PATCH "362")
+set(VERSION_MAJOR "0")
+set(VERSION_MINOR "1")
+set(VERSION_PATCH "0")
 set(VERSION_TWEAK "0")
-set(VERSION_DATE "19/06/2026") # DD/MM/YYYY format
+set(VERSION_DATE "12/07/2026") # DD/MM/YYYY format
 set(OCPN_MIN_VERSION "ov58")
 
 set(OCPN_API_VERSION_MAJOR "1")
@@ -102,16 +100,14 @@ set(ALPHA "alpha") # Standard Repos
 # Set if  Cloudsmith Base Repository name does not match your Git Repository
 # name. set(CLOUDSMITH_BASE_REPOSITORY "${GIT_REPOSITORY_NAME}")
 # set(CLOUDSMITH_BASE_REPOSITORY "opencpn-plugins")  #Ricks's customization
-set(CLOUDSMITH_BASE_REPOSITORY "testplugin") # without the pi
+set(CLOUDSMITH_BASE_REPOSITORY "environmental-grib")
 
 # Set the following to use OpenCPN cloudsmith repositories instead of own
 # repositories
 set(CLOUDSMITH_USER "opencpn")
 # set(CLOUDSMITH_USER "jon-gough")
 
-set(XML_INFO_URL
-    "https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:plugins:safety:odraw1.6_pi"
-)
+set(XML_INFO_URL "https://github.com/pob220/environmental_grib_pi")
 set(XML_SUMMARY ${SHORT_DESCRIPTION})
 set(XML_DESCRIPTION ${LONG_DESCRIPTION})
 
@@ -121,15 +117,17 @@ set(XML_DESCRIPTION ${LONG_DESCRIPTION})
 #
 
 option(PLUGIN_USE_SVG "Use SVG graphics" ON)
+option(BUNDLE_GENERATOR_RUNTIME
+       "Bundle the native helper's non-system runtime dependencies" ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # Use local version of GLU library requires libs/glu directory
 set(USE_LOCAL_GLU FALSE)
 # Prefer libGL.so to libOpenGL.so, see CMP0072
 set(OpenGL_GL_PREFERENCE "LEGACY") # not operational
 
-option(USE_GL "Enable OpenGL support" ON)
+option(USE_GL "Enable OpenGL support" OFF)
 message(STATUS "${CMLOC}USE_GL: ${USE_GL}")
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -180,19 +178,9 @@ add_definitions(-DUSE_S57)
 
 # ---- Section Below - Add your project SET(SRCS and SET(HDRS  etc..
 
-set(SRCS src/tpControlDialogDef.cpp src/tpControlDialogImpl.cpp src/tpicons.cpp
-         src/tpJSON.cpp src/testplugin_pi.cpp src/tpUtils.cpp
-)
+set(SRCS src/environmental_grib_pi.cpp src/EnvironmentalGribDialog.cpp)
 
-set(HDRS
-    include/testplugin_pi.h
-    include/tpicons.h
-    include/tpControlDialogDef.h
-    include/tpControlDialogImpl.h
-    include/tpIconCombo.h
-    include/tpJSON.h
-    include/tpUtils.h
-)
+set(HDRS include/environmental_grib_pi.h include/EnvironmentalGribDialog.h)
 
 add_definitions(-DPLUGIN_USE_SVG)
 
@@ -206,7 +194,7 @@ else (APPLE)
   option(OD_JSON_SCHEMA_VALIDATOR "Use JSON Schema validator" ON)
 endif (APPLE)
 
-set(OD_JSON_SCHEMA_VALIDATOR ON)
+set(OD_JSON_SCHEMA_VALIDATOR OFF)
 
 if (OD_JSON_SCHEMA_VALIDATOR)
   message(
@@ -251,6 +239,56 @@ include_directories(BEFORE ${PROJECT_SOURCE_DIR}/ocpninclude)
 
 target_sources(${PACKAGE_NAME} PUBLIC ${SRC})
 
+# The generator is a separate native process.  Keeping it out of the plugin
+# address space isolates network/model parsing failures from OpenCPN while
+# sharing one pinned implementation across development and catalogue builds.
+include(CTest)
+add_subdirectory(generator EXCLUDE_FROM_ALL)
+add_dependencies(${PACKAGE_NAME} environmental-grib)
+
+if(UNIX AND NOT APPLE)
+  set_target_properties(environmental-grib PROPERTIES
+    OUTPUT_NAME "environmental-grib.bin"
+  )
+  install(TARGETS environmental-grib RUNTIME DESTINATION
+          "share/opencpn/plugins/${PACKAGE_NAME}/libexec")
+  install(PROGRAMS scripts/environmental-grib
+          DESTINATION "share/opencpn/plugins/${PACKAGE_NAME}/bin")
+
+  if(BUNDLE_GENERATOR_RUNTIME)
+    find_path(ECCODES_DEFINITIONS_DIR NAMES grib1/boot.def
+      PATHS /usr/share/eccodes/definitions /usr/local/share/eccodes/definitions)
+    find_path(ECCODES_SAMPLES_DIR NAMES regular_ll_sfc_grib1.tmpl
+      PATHS /usr/share/eccodes/samples /usr/local/share/eccodes/samples)
+    find_path(PROJ_DATA_DIR NAMES proj.db
+      PATHS /usr/share/proj /usr/local/share/proj)
+    if(NOT IS_DIRECTORY "${ECCODES_DEFINITIONS_DIR}" OR
+       NOT IS_DIRECTORY "${ECCODES_SAMPLES_DIR}" OR
+       NOT IS_DIRECTORY "${PROJ_DATA_DIR}")
+      message(FATAL_ERROR "ecCodes or PROJ runtime data was not found")
+    endif()
+
+    install(DIRECTORY "${ECCODES_DEFINITIONS_DIR}"
+      DESTINATION "share/opencpn/plugins/${PACKAGE_NAME}/runtime/share/eccodes")
+    install(DIRECTORY "${ECCODES_SAMPLES_DIR}"
+      DESTINATION "share/opencpn/plugins/${PACKAGE_NAME}/runtime/share/eccodes")
+    install(DIRECTORY "${PROJ_DATA_DIR}"
+      DESTINATION "share/opencpn/plugins/${PACKAGE_NAME}/runtime/share")
+    install(FILES generator/LICENSE data/THIRD_PARTY_NOTICES.md
+      DESTINATION "share/opencpn/plugins/${PACKAGE_NAME}/runtime/licenses")
+
+    configure_file(cmake/BundleGeneratorRuntime.cmake.in
+      "${CMAKE_CURRENT_BINARY_DIR}/BundleGeneratorRuntime.cmake" @ONLY)
+    install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/BundleGeneratorRuntime.cmake")
+  endif()
+elseif(WIN32)
+  install(TARGETS environmental-grib RUNTIME DESTINATION
+          "plugins/${PACKAGE_NAME}/bin")
+elseif(APPLE)
+  install(TARGETS environmental-grib RUNTIME DESTINATION
+          "OpenCPN.app/Contents/SharedSupport/plugins/${PACKAGE_NAME}/bin")
+endif()
+
 # ==============================================================
 
 if (NOT OCPN_FLATPAK_CONFIG)
@@ -266,20 +304,8 @@ if (NOT OCPN_FLATPAK_CONFIG)
   add_subdirectory(opencpn-libs/api-${OCPN_API_VERSION_MINOR})
   target_link_libraries(${PACKAGE_NAME} ocpn::api)
 
-  add_subdirectory(opencpn-libs/tinyxml)
-  target_link_libraries(${PACKAGE_NAME} ocpn::tinyxml)
-
-  add_subdirectory(opencpn-libs/odapi)
-  target_link_libraries(${PACKAGE_NAME} ocpn::odapi)
-
-  add_subdirectory(opencpn-libs/jsonlib)
-  target_link_libraries(${PACKAGE_NAME} ocpn::jsonlib)
-
   add_subdirectory(opencpn-libs/wxJSON)
   target_link_libraries(${PACKAGE_NAME} ocpn::wxjson)
-
-  add_subdirectory(opencpn-libs/plugin_dc)
-  target_link_libraries(${PACKAGE_NAME} ocpn::plugin-dc)
 
 endif (NOT OCPN_FLATPAK_CONFIG)
 

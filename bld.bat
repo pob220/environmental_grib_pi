@@ -1,4 +1,4 @@
-REM FE2  Testplugin
+REM FE2  Environmental_grib
 
 
 REM  Requires wxWidgets setup

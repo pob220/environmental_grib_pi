@@ -134,7 +134,9 @@ if (UNIX AND NOT APPLE)
   set(CPACK_CMAKE_GENERATOR Ninja)
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PACKAGE_NAME} PlugIn for OpenCPN")
   set(CPACK_PACKAGE_DESCRIPTION "${PACKAGE_NAME} PlugIn for OpenCPN")
-  set(CPACK_SET_DESTDIR ON)
+  # Plugin Manager archives must contain lib/ and share/ at their root.  With
+  # CMake 4, DESTDIR packaging embeds the local build path in TGZ archives.
+  set(CPACK_SET_DESTDIR OFF)
 
 endif (UNIX AND NOT APPLE)
 

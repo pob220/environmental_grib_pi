@@ -17,6 +17,8 @@ fi
 sudo apt-get -qq update
 sudo apt-get install devscripts equivs
 
+git submodule update --init --recursive
+
 rm -rf build && mkdir build && cd build
 
 # Install extra build libs

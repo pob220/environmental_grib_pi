@@ -2,3 +2,6 @@
 	path = opencpn-libs
 	url = https://github.com/OpenCPN/opencpn-libs.git
 	branch = main
+[submodule "generator"]
+	path = generator
+	url = https://github.com/pob220/environmental-grib-generator.git

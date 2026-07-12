@@ -178,9 +178,11 @@ add_definitions(-DUSE_S57)
 
 # ---- Section Below - Add your project SET(SRCS and SET(HDRS  etc..
 
-set(SRCS src/environmental_grib_pi.cpp src/EnvironmentalGribDialog.cpp)
+set(SRCS src/environmental_grib_pi.cpp src/EnvironmentalGribDialog.cpp
+         src/GeneratorJobJson.cpp)
 
-set(HDRS include/environmental_grib_pi.h include/EnvironmentalGribDialog.h)
+set(HDRS include/environmental_grib_pi.h include/EnvironmentalGribDialog.h
+         include/GeneratorJobJson.h)
 
 add_definitions(-DPLUGIN_USE_SVG)
 
@@ -306,6 +308,17 @@ if (NOT OCPN_FLATPAK_CONFIG)
 
   add_subdirectory(opencpn-libs/wxJSON)
   target_link_libraries(${PACKAGE_NAME} ocpn::wxjson)
+
+  if(BUILD_TESTING)
+    add_executable(environmental_grib_job_json_tests
+      test/GeneratorJobJson_tests.cpp src/GeneratorJobJson.cpp)
+    target_include_directories(environmental_grib_job_json_tests PRIVATE
+      ${PROJECT_SOURCE_DIR}/include)
+    target_link_libraries(environmental_grib_job_json_tests PRIVATE
+      ocpn::wxjson ${wxWidgets_LIBRARIES})
+    add_test(NAME environmental_grib_job_json_tests
+             COMMAND environmental_grib_job_json_tests)
+  endif()
 
 endif (NOT OCPN_FLATPAK_CONFIG)
 

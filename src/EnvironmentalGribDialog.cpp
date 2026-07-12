@@ -1,5 +1,7 @@
 #include "EnvironmentalGribDialog.h"
 
+#include "GeneratorJobJson.h"
+
 #include <wx/config.h>
 #include <wx/datetime.h>
 #include <wx/dir.h>
@@ -1351,9 +1353,7 @@ bool EnvironmentalGribDialog::WriteGenerateJob(const wxString& job_path,
   if (m_mode->GetSelection() == 2) currentSource = "netcdf";
   if (m_mode->GetSelection() == 3) currentSource = "synthetic";
 
-  wxJSONValue root;
-  root["schemaVersion"] = 1;
-  root["operation"] = "generateEnvironment";
+  wxJSONValue root = CreateGeneratorJobEnvelope();
   wxJSONValue& request = root["request"];
   request["bbox"]["west"] = west;
   request["bbox"]["south"] = south;
@@ -1362,7 +1362,6 @@ bool EnvironmentalGribDialog::WriteGenerateJob(const wxString& job_path,
   request["start"] = m_startUtc->GetValue();
   request["hours"] = m_durationHours->GetValue();
   request["stepHours"] = m_stepHours->GetValue();
-  request["cycle"] = "auto";
   request["weatherProvider"] = weatherProvider;
   request["weatherPreset"] = weatherPreset;
   request["weatherGridSpacingDeg"] = 0.025;
@@ -1370,10 +1369,10 @@ bool EnvironmentalGribDialog::WriteGenerateJob(const wxString& job_path,
   request["includeWaves"] =
       m_includeWaves->GetValue() && weatherProvider != "none" &&
       weatherProvider != "existing-file";
-  request["waveProvider"] =
+  request["waveProvider"] = wxString(
       m_waveProvider->GetStringSelection().Contains("Copernicus")
           ? "copernicus_global_waves"
-          : "gfs_wave";
+          : "gfs_wave");
   request["waveStepHours"] = 3;
   request["currentSource"] = currentSource;
   request["currentFile"] = m_existingCurrentFile->GetPath();
@@ -1394,9 +1393,6 @@ bool EnvironmentalGribDialog::WriteGenerateJob(const wxString& job_path,
     request["downloadDirectory"] = downloadDir.GetPath();
     request["copernicusUsername"] = m_username->GetValue();
   }
-  root["credentials"]["copernicusPasswordEnvironment"] =
-      "ENVIRONMENTAL_GRIB_COPERNICUS_PASSWORD";
-
   wxJSONWriter writer;
   wxString text;
   writer.Write(root, text);
